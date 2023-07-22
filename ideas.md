@@ -11,3 +11,9 @@ potential starting point:
 * resolve text to a Book
 * see how that book scores on the users profile
 * return set of recommended books
+
+
+less prescriptive outline:
+* image (end result is live camera stream on mobile device. static images for now)
+* books (idea is to OCR based on a book spine region, but maybe just OCR)
+* recommendation (need to find a service like Goodreads with an API)
