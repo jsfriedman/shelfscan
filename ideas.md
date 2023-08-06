@@ -17,3 +17,9 @@ less prescriptive outline:
 * image (end result is live camera stream on mobile device. static images for now)
 * books (idea is to OCR based on a book spine region, but maybe just OCR)
 * recommendation (need to find a service like Goodreads with an API)
+
+
+SAM ViT-L weights (git ignored): https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+
+cd weights
+curl.exe -o sam_vit_h_4b8939.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
