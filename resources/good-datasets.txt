@@ -1,0 +1,3 @@
+https://universe.roboflow.com/harald-varner-xv5u7/book-spine-instance-segmentation
+
+https://universe.roboflow.com/cnu-hmlab-syko-and-ash/book-spine-dataset-library/dataset/3
