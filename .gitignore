@@ -3,3 +3,5 @@ venv/
 weights/
 dataset/
 runs/segment
+notebooks/yolov8n-seg.pt
+yolov8n.pt

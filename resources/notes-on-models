@@ -1,0 +1,16 @@
+yolov8_n_bookspine.pt:
+first attempt
+batch=4, seemed like it was a little too close to maxing out the memory
+
+yolov8_n_23aug2023.pt:
+added data augmentation to hyperparamters in data.yaml, set all values to 0.5 probability
+doesnt seem to have changed too much. I think not enough test samples
+
+yolov8_n_24aug2023.pt:
+data augmentation probabilities set to 1.0
+
+yolov8_n_24aug2023_2.pt:
+expanded training set
+
+yolov8_n_24aug2023_3.pt:
+expanded training set plus data augmentation (1.0s)
