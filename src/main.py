@@ -13,18 +13,28 @@ from ultralytics import YOLO
 from dotenv import load_dotenv
 import requests
 
+import time
+
 load_dotenv()
 
+tic = time.perf_counter()
 app = FastAPI()
+print('starting server')
 model = YOLO(r"yolov8_n_24aug2023.pt")
+print('yolo model loaded')
 reader = easyocr.Reader(['en'])
+print('ocr model loaded')
 ngram_data_df = pd.read_csv('../3grams.csv')
+print('ngram data loaded')
 
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
+toc = time.perf_counter()
+print(f"server set-up time: {toc-tic:0.2f} seconds")
 
 
 @app.get("/")
 async def root():
+    tic = time.perf_counter()
     input_image = Image.open(r"..\test-data\book_shelf3.jpg")
 
     results = model.predict(source=input_image, save=True, show_labels=False, show_conf=False, boxes=False)
@@ -38,11 +48,16 @@ async def root():
         ocr_results = get_ocr_results_all_rotations(bookspine_isolated_rotated_to_flat_np, reader)
         ngrams_dict = generate_ngrams_dict(ocr_results)
         ocr_results_coherence_scores = calculate_ocr_coherence_scores(ngrams_dict, ngram_data_df)
-        most_coherent_text = get_most_coherent_text(ocr_results_coherence_scores)
+        most_coherent_text = get_most_coherent_text(ocr_results, ocr_results_coherence_scores)
         if len(most_coherent_text) > 0:  # no purpose in storing blank results if they somehow happen
             ocr_book_spines.append(most_coherent_text)
 
-    return {}
+    book_info_from_query = [query_book_info_from_book_spine(_) for _ in ocr_book_spines]
+    formatted_query_results = [f"{_['title']} by {', '.join(_['authors'])}" for _ in book_info_from_query]
+
+    toc = time.perf_counter()
+    print(f"application runs in {toc-tic:0.2f} seconds")
+    return formatted_query_results
 
 
 def get_rotate_to_flat_angle(mask_polygon: Polygon) -> float:
@@ -125,7 +140,7 @@ def calculate_ocr_coherence_scores(ngrams_dict, ngram_data_df) -> dict:
     return ocr_results_coherence_scores
 
 
-def get_most_coherent_text(ocr_results_coherence_scores):
+def get_most_coherent_text(ocr_results, ocr_results_coherence_scores):
     most_coherent_angle = max(ocr_results_coherence_scores, key=ocr_results_coherence_scores.get)
     return ocr_results[most_coherent_angle]
 
