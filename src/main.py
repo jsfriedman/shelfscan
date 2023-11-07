@@ -1,6 +1,7 @@
 import io
 import os
 
+import cv2
 import easyocr
 import numpy as np
 import pandas as pd
@@ -10,10 +11,10 @@ from PIL import Image
 from fastapi import FastAPI, File, UploadFile
 from scipy.ndimage import rotate as scipy_rotate
 from shapely import Polygon
-from starlette.responses import HTMLResponse
 from ultralytics import YOLO
 from dotenv import load_dotenv
 import requests
+import imghdr
 
 import time
 
@@ -38,8 +39,15 @@ print(f"server set-up time: {toc-tic:0.2f} seconds")
 async def scan_image(image_file: UploadFile = File(...)):
 
     tic = time.perf_counter()
-    contents = await image_file.read()
-    input_image = Image.open(io.BytesIO(contents)) # OpenCV for YOLO model doesnt like that this isnt an image with an extension
+    serialized_image_bytes = await image_file.read()
+
+    image_np_1d = np.frombuffer(serialized_image_bytes, np.uint8)
+    img_np_2d = cv2.imdecode(image_np_1d, cv2.IMREAD_COLOR)
+    cv_image_rgb = cv2.cvtColor(img_np_2d, cv2.COLOR_BGR2RGB)
+    input_image = Image.fromarray(cv_image_rgb)
+
+    # image_file_type = imghdr.what(None, h=serialized_image_bytes)
+    # input_image = Image.open(io.BytesIO(serialized_image_bytes), formats=[image_file_type])
 
     # input_image = Image.open(r"..\test-data\book_shelf3.jpg")
 
@@ -162,6 +170,7 @@ def query_book_info_from_book_spine(book_spine_text: str) -> dict:
 
     if response_json['totalItems'] > 0:
         book_info = response_json['items'][0]['volumeInfo']
+        if 'authors' not in book_info: book_info |= {'authors' : ['unknown']}
     else:
         book_info = {'title': 'unable to find match', 'authors': ['unknown']}
     return book_info
