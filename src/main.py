@@ -1,3 +1,4 @@
+import io
 import os
 
 import easyocr
@@ -6,9 +7,10 @@ import pandas as pd
 import rasterio.features
 import uvicorn
 from PIL import Image
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from scipy.ndimage import rotate as scipy_rotate
 from shapely import Polygon
+from starlette.responses import HTMLResponse
 from ultralytics import YOLO
 from dotenv import load_dotenv
 import requests
@@ -32,10 +34,14 @@ toc = time.perf_counter()
 print(f"server set-up time: {toc-tic:0.2f} seconds")
 
 
-@app.get("/")
-async def root():
+@app.post("/scan/")
+async def scan_image(image_file: UploadFile = File(...)):
+
     tic = time.perf_counter()
-    input_image = Image.open(r"..\test-data\book_shelf3.jpg")
+    contents = await image_file.read()
+    input_image = Image.open(io.BytesIO(contents)) # OpenCV for YOLO model doesnt like that this isnt an image with an extension
+
+    # input_image = Image.open(r"..\test-data\book_shelf3.jpg")
 
     results = model.predict(source=input_image, save=True, show_labels=False, show_conf=False, boxes=False)
     bookspine_masks = [_ for _ in results[0].masks.xy if len(_) > 0]  # filter empty masks
@@ -153,7 +159,7 @@ def query_book_info_from_book_spine(book_spine_text: str) -> dict:
     }
     response = requests.get('https://www.googleapis.com/books/v1/volumes/', params=query)
     response_json = response.json()
-    # print(response_json)
+
     if response_json['totalItems'] > 0:
         book_info = response_json['items'][0]['volumeInfo']
     else:
