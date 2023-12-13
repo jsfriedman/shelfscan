@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 
 import cv2
@@ -19,20 +20,21 @@ import imghdr
 import time
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 tic = time.perf_counter()
 app = FastAPI()
-print('starting server')
+logger.log('starting server')
 model = YOLO(r"yolov8_n_24aug2023.pt")
-print('yolo model loaded')
+logger.log('yolo model loaded')
 reader = easyocr.Reader(['en'])
-print('ocr model loaded')
+logger.log('ocr model loaded')
 ngram_data_df = pd.read_csv('../3grams.csv')
-print('ngram data loaded')
+plogger.logrint('ngram data loaded')
 
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 toc = time.perf_counter()
-print(f"server set-up time: {toc-tic:0.2f} seconds")
+logger.log(f"server set-up time: {toc-tic:0.2f} seconds")
 
 
 @app.post("/scan/")
@@ -70,7 +72,8 @@ async def scan_image(image_file: UploadFile = File(...)):
     formatted_query_results = [f"{_['title']} by {', '.join(_['authors'])}" for _ in book_info_from_query]
 
     toc = time.perf_counter()
-    print(f"application runs in {toc-tic:0.2f} seconds")
+    logger.log(f"application runs in {toc-tic:0.2f} seconds")
+    logger.log(formatted_query_results)
     return formatted_query_results
 
 
