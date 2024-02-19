@@ -15,7 +15,6 @@ from shapely import Polygon
 from ultralytics import YOLO
 from dotenv import load_dotenv
 import requests
-import imghdr
 
 import time
 
@@ -24,17 +23,17 @@ logger = logging.getLogger(__name__)
 
 tic = time.perf_counter()
 app = FastAPI()
-logger.log('starting server')
+logger.debug('starting server')
 model = YOLO(r"yolov8_n_24aug2023.pt")
-logger.log('yolo model loaded')
+logger.debug('yolo model loaded')
 reader = easyocr.Reader(['en'])
-logger.log('ocr model loaded')
+logger.debug('ocr model loaded')
 ngram_data_df = pd.read_csv('../3grams.csv')
-plogger.logrint('ngram data loaded')
+logger.debug('ngram data loaded')
 
 GOOGLE_BOOKS_API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 toc = time.perf_counter()
-logger.log(f"server set-up time: {toc-tic:0.2f} seconds")
+logger.debug(f"server set-up time: {toc-tic:0.2f} seconds")
 
 
 @app.post("/scan/")
@@ -47,11 +46,6 @@ async def scan_image(image_file: UploadFile = File(...)):
     img_np_2d = cv2.imdecode(image_np_1d, cv2.IMREAD_COLOR)
     cv_image_rgb = cv2.cvtColor(img_np_2d, cv2.COLOR_BGR2RGB)
     input_image = Image.fromarray(cv_image_rgb)
-
-    # image_file_type = imghdr.what(None, h=serialized_image_bytes)
-    # input_image = Image.open(io.BytesIO(serialized_image_bytes), formats=[image_file_type])
-
-    # input_image = Image.open(r"..\test-data\book_shelf3.jpg")
 
     results = model.predict(source=input_image, save=True, show_labels=False, show_conf=False, boxes=False)
     bookspine_masks = [_ for _ in results[0].masks.xy if len(_) > 0]  # filter empty masks
@@ -72,8 +66,8 @@ async def scan_image(image_file: UploadFile = File(...)):
     formatted_query_results = [f"{_['title']} by {', '.join(_['authors'])}" for _ in book_info_from_query]
 
     toc = time.perf_counter()
-    logger.log(f"application runs in {toc-tic:0.2f} seconds")
-    logger.log(formatted_query_results)
+    logger.debug(f"application runs in {toc-tic:0.2f} seconds")
+    logger.debug(formatted_query_results)
     return formatted_query_results
 
 
